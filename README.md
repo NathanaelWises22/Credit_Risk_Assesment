@@ -234,6 +234,8 @@ print(f"No. of testing examples: {testing_data.shape[0]}")
 
 # Train the model.
 
+You can find documentation about PyCaret here  https://medium.com/analytics-vidhya/pycaret-101-for-beginners-27d9aefd34c5 or https://pycaret.gitbook.io/docs/
+
 We create the environment for Pycaret first. We will fix the imbalance issue on this step too.
 
 ```
@@ -243,4 +245,14 @@ from pycaret.classification import *
 grid = setup(data= training_data, target= 'loan_status',fix_imbalance=True) #fix_imbalance will automaticaaly fix the imbalanced dataset by oversampling using the SMOTE method.
 
 ```
+Create and compare the model
+
+```
+## evaluate models and compare models
+best = compare_models()
+
+# report the best model
+print(best)
+```
+
 
