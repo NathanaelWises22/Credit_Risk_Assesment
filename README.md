@@ -232,11 +232,12 @@ print(f"No. of testing examples: {testing_data.shape[0]}")
 # No. of testing examples: 9725
 ```
 
-# Train the model.
+# Create & Train the model.
 
 You can find documentation about PyCaret here  https://medium.com/analytics-vidhya/pycaret-101-for-beginners-27d9aefd34c5 or https://pycaret.gitbook.io/docs/
 
 We create the environment for Pycaret first. We will fix the imbalance issue on this step too.
+Take note that PyCaret function will automatically split the data into training-test data on its own too.
 
 ```
 from pycaret.classification import *  
@@ -254,5 +255,73 @@ best = compare_models()
 # report the best model
 print(best)
 ```
+The best model for this dataset according to the PyCaret is CatBoost Classifier. Training Time-wise i think Light Gradient Boosting Machine	would be a better option since it gives a shorter training time and not-so-different accuracy and precision, but since I want the best in terms of Accuracy adn precision, this time i go with the Catboost Classifier model.
+You can find the documentation about CatBoost Classifier here on https://catboost.ai/
 
+to create the model, we call this function
+```
+#creating model
+catboost = create_model('catboost')
+#this model run on the PyCaret transformed training data set.
+```
+The result of our training model is accuracy 93,41%, prec 96,48%.
+We can also plot the confusion matrix and classification report using the function below.
 
+```
+# Plotting the classification report
+plot_model(catboost,plot='class_report')
+
+# Plotting the confusion matrix
+plot_model(catboost,plot='confusion_matrix')
+#from the Confusion Matrix we can also know that at least there will be 1155 customers that we will reject because the model calculate they will almost certainly defaulting.
+```
+# HyperParameter Tuning
+ To further increase the accuracy and precision of our model, we do HyperParameter Tuning. From Pycaret library,Hyperparameter tuning is quite simple. JUst put the function below. Take note however, by default it will automatically using the Random Grid Search method. 
+```
+ # tune model hyperparameters
+tuned_cat = tune_model(catboost)
+
+#evaluate tuned modedl
+evaluate_model(tuned_cat)
+```
+After tuning, accuracy 92,90%, prec 93,41%. There's decrease on accuracy and precision. This may happen if the default parameter used on creating the model is actually better than the one we uso on HyperParameter Tuning.
+So for now, We use the non-tuned model.
+
+# Test The Model
+We test the model on Transformed test data, the test data that PyCaret function automatically create,let's call it Evaluation Dataset for further on. Let's try to test our model, We only need to insert the function below to try it.
+
+```
+#test the model
+predict_model(catboost)
+
+final_cat = finalize_model(catboost)
+print(final_cat)
+```
+From the Evaluation Dataset we get result Accuracy 93,38% & Precision 96,36%
+Next, let's try to run it with the dataset we held back at the beginning. 
+
+```
+unseen_predictions = predict_model(catboost, data=testing_data)
+unseen_predictions.head()
+```
+
+The Label and Score columns are added onto the data_unseen set. Label is the prediction and score is the probability of the prediction. Notice that predicted results are concatenated to the original dataset while all the transformations are automatically performed in the background.
+
+```
+!pip install pycaret-nightly
+from pycaret.utils import check_metric
+check_metric(unseen_predictions['loan_status'], unseen_predictions2['Label'], metric = 'Accuracy')
+```
+From the dataset that we held back, model perform with 93,83% accuracy
+
+# Interpret the Model & Conclusion
+
+display feature and their importance
+```
+plot_model(catboost, plot = 'feature')
+```
+5 most important feature are 1. loan_percent_income, 2. person_income, 3.person_home_ownership_rent, 4.loan_intent_VENTURE, 5.loan grade A
+
+Conclusion : The 5 features that most affect the default of this model are loan_percent_income, person_income, person_home_ownership_rent, loan_intent_VENTURE, loan grade A .
+From this dataset, we can reduce the percentage of customers who default at the beginning of 22% to 6.17% using the model we developed using the Catboost Classifier and perform with a level of Precision 96.91% & accuracy 93.83%.
+With this 15.83% increase in the default rate, lenders and borrowers can be better protected from risk.
