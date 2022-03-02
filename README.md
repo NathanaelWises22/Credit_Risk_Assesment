@@ -174,5 +174,73 @@ plt.figure(figsize=(10,8))
 matrix_df = pps.matrix(df)[['x', 'y', 'ppscore']].pivot(columns='x', index='y', values='ppscore')
 sns.heatmap(matrix_df, vmin=0, vmax=1, cmap="Blues", linewidths=0.5, annot=True)
 ```
+From the matrix we can see that...., using the Predictive Power Score (PPS) i can do a simple EDA quickly to know if there's any correlation between the variables. 
 
+In the next bit, i create the pearson correlation between the numerical variable to 'Loan_status' and categorical variables to 'loan_status' 
+
+```
+#correlation to loan status
+corr = num_cols.corr().sort_values('loan_status', axis=1, ascending=False)
+corr = corr.sort_values('loan_status', axis=0, ascending=True)
+mask = np.zeros_like(corr)
+mask[np.triu_indices_from(mask, k=1)] = True
+with sns.axes_style("white"):
+    f, ax = plt.subplots(figsize=(8, 6))
+    ax = sns.heatmap(corr, mask=mask, vmin=corr.loan_status.min(), 
+                     vmax=corr.drop(['loan_status'], axis=0).loan_status.max(),
+                     square=True, annot=True, fmt='.2f',
+                     center=0, cmap='RdBu',annot_kws={"size": 12})
+                     
+ ```
+From the correlation matrix above we know that person_income, person_emp_length, and person_age: has negative effect on loan_status being default which means the higher this variable are the less likely it will makes a loan go default.
+
+loan_percent_income, loan_int_rate, and loan_amnt has positive effect on loan_status being default which means, the higher this variable are the more likely it will make a loan default.
+
+```
+#correlation between the catogorical variables
+encoded_cat_cols = pd.get_dummies(char_col)
+cat_cols_corr = pd.concat([encoded_cat_cols, df_clean1['loan_status']], axis=1)
+corr = cat_cols_corr.corr().sort_values('loan_status', axis=1, ascending=False)
+corr = corr.sort_values('loan_status', axis=0, ascending=True)
+mask = np.zeros_like(corr)
+mask[np.triu_indices_from(mask, k=1)] = True
+with sns.axes_style("white"):
+    f, ax = plt.subplots(figsize=(16, 10))
+    ax = sns.heatmap(corr, mask=mask, vmin=corr.loan_status.min(), 
+                     vmax=corr.drop(['loan_status'], axis=0).loan_status.max(), 
+                     square=True, annot=True, fmt='.2f',
+                     center=0, cmap='RdBu',annot_kws={"size": 10})
+```
+Loan grade A-B-C, loan intent venture-education-personal, history person never default, homeownership mortgage-own : has negative effect on loan_status being default which means the higher this variable are the less likely it will makes a loan go default.
+
+loan grade G-F-Y-E-D,loan intent medical,homeimprove,debt, homeownership rent,other : has postive effect on loan_status being default which means, the higher this variable are the more likely it will make a loan default.
+
+# Split the Dataset
+
+Splitting the Dataset for 70:30. We will held back the 30% part as unseen data to test our model at the final stage.
+
+```
+#split test-train data
+from sklearn.model_selection import train_test_split
+
+training_data, testing_data = train_test_split(df_clean1, test_size=0.3, random_state=25)
+
+print(f"No. of training examples: {training_data.shape[0]}")
+print(f"No. of testing examples: {testing_data.shape[0]}")
+
+# No. of training examples: 22691
+# No. of testing examples: 9725
+```
+
+# Train the model.
+
+We create the environment for Pycaret first. We will fix the imbalance issue on this step too.
+
+```
+from pycaret.classification import *  
+
+#pycaret to determine the model
+grid = setup(data= training_data, target= 'loan_status',fix_imbalance=True) #fix_imbalance will automaticaaly fix the imbalanced dataset by oversampling using the SMOTE method.
+
+```
 
