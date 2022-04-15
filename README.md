@@ -75,7 +75,9 @@ plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10, right=0.95, hspace=0.35,
 plt.show()
 #before removing outlier
 ```
-Before removing the outlier, the data should be positive skewed. So we check and remove any outlier so the data distributed more evenly.
+![credit risk dataset-before removing outlier](https://user-images.githubusercontent.com/92627169/163572104-80f73660-4319-4bc7-826a-d0b7cb891001.png)
+
+Before removing the outlier, the data is positively skewed. So we check and remove any outlier so the data distributed more evenly.
 We will check the outliers using IQR method.
 ```
 #checking for outlier
@@ -137,6 +139,9 @@ plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10, right=0.95, hspace=0.35,
 plt.show()
 #after removing outlier
 ```
+![credit risk dataset-after removing outlier](https://user-images.githubusercontent.com/92627169/163572168-0f6e944a-bda1-436f-8586-0dc36656494a.png)
+
+
 # Simple EDA
  We check the comaparison between the 2 classes of our target column to make sure there isn't any imbalance
  
@@ -158,23 +163,11 @@ for i in ax.patches:
                 color='#444444')
 plt.show()
 ```
+![loan status comparion](https://user-images.githubusercontent.com/92627169/163567405-c0cac97e-8e0f-459d-a215-0d8c0b8aa1d3.png)
+
 Loan status which is our target column have 78:22 ratio of default and non-default.
 Where 0 = non-default , 1 = default.
 Because the data is a little bit imbalance, we will use fix that at the later stage
-
-```
-pip install ppscore
-
-```
-We use PPS Score to better understand the general correlation between the numerical and categorical variables.
-I still use the pearson correlation method to understood the linear correlation between the variables.
-
-```
-plt.figure(figsize=(10,8))
-matrix_df = pps.matrix(df)[['x', 'y', 'ppscore']].pivot(columns='x', index='y', values='ppscore')
-sns.heatmap(matrix_df, vmin=0, vmax=1, cmap="Blues", linewidths=0.5, annot=True)
-```
-From the matrix we can see that...., using the Predictive Power Score (PPS) i can do a simple EDA quickly to know if there's any correlation between the variables. 
 
 In the next bit, i create the pearson correlation between the numerical variable to 'Loan_status' and categorical variables to 'loan_status' 
 
@@ -192,6 +185,8 @@ with sns.axes_style("white"):
                      center=0, cmap='RdBu',annot_kws={"size": 12})
                      
  ```
+![credit risk dataset- correlation between num_variable](https://user-images.githubusercontent.com/92627169/163572248-986b5610-4d56-4243-8f86-8888a03530b5.png)
+
 From the correlation matrix above we know that person_income, person_emp_length, and person_age: has negative effect on loan_status being default which means the higher this variable are the less likely it will makes a loan go default.
 
 loan_percent_income, loan_int_rate, and loan_amnt has positive effect on loan_status being default which means, the higher this variable are the more likely it will make a loan default.
@@ -211,6 +206,8 @@ with sns.axes_style("white"):
                      square=True, annot=True, fmt='.2f',
                      center=0, cmap='RdBu',annot_kws={"size": 10})
 ```
+![correlation between cat variable](https://user-images.githubusercontent.com/92627169/163572281-6f590d68-5c1b-456a-91ac-b9fc7ee070e2.png)
+
 Loan grade A-B-C, loan intent venture-education-personal, history person never default, homeownership mortgage-own : has negative effect on loan_status being default which means the higher this variable are the less likely it will makes a loan go default.
 
 loan grade G-F-Y-E-D,loan intent medical,homeimprove,debt, homeownership rent,other : has postive effect on loan_status being default which means, the higher this variable are the more likely it will make a loan default.
@@ -255,6 +252,8 @@ best = compare_models()
 # report the best model
 print(best)
 ```
+![PyCaret](https://user-images.githubusercontent.com/92627169/163572344-7b752ab3-f9f2-4e43-b4a1-e101ceebf473.png)
+
 The best model for this dataset according to the PyCaret is CatBoost Classifier. Training Time-wise i think Light Gradient Boosting Machine	would be a better option since it gives a shorter training time and not-so-different accuracy and precision, but since I want the best in terms of Accuracy adn precision, this time i go with the Catboost Classifier model.
 You can find the documentation about CatBoost Classifier here on https://catboost.ai/
 
@@ -275,6 +274,9 @@ plot_model(catboost,plot='class_report')
 plot_model(catboost,plot='confusion_matrix')
 #from the Confusion Matrix we can also know that at least there will be 1155 customers that we will reject because the model calculate they will almost certainly defaulting.
 ```
+![CM sebelum tuning](https://user-images.githubusercontent.com/92627169/163572408-056f4b22-b54a-4a22-a479-acfd83ae15cf.png)
+
+
 # HyperParameter Tuning
  To further increase the accuracy and precision of our model, we do HyperParameter Tuning. From Pycaret library,Hyperparameter tuning is quite simple. JUst put the function below. Take note however, by default it will automatically using the Random Grid Search method. 
 ```
@@ -284,6 +286,8 @@ tuned_cat = tune_model(catboost)
 #evaluate tuned modedl
 evaluate_model(tuned_cat)
 ```
+![CM setelah tuning](https://user-images.githubusercontent.com/92627169/163572575-abf7fd1b-4aac-49fd-a915-ad3dbcfdf5b4.png)
+
 After tuning, accuracy 92,90%, prec 93,41%. There's decrease on accuracy and precision. This may happen if the default parameter used on creating the model is actually better than the one we uso on HyperParameter Tuning.
 So for now, We use the non-tuned model.
 
@@ -320,6 +324,8 @@ display feature and their importance
 ```
 plot_model(catboost, plot = 'feature')
 ```
+![feature importance](https://user-images.githubusercontent.com/92627169/163572638-1c712a0a-6589-4b50-9048-599fa119ad8e.png)
+
 5 most important feature are 1. loan_percent_income, 2. person_income, 3.person_home_ownership_rent, 4.loan_intent_VENTURE, 5.loan grade A
 
 Conclusion : The 5 features that most affect the default of this model are loan_percent_income, person_income, person_home_ownership_rent, loan_intent_VENTURE, loan grade A .
